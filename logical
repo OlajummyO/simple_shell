@@ -1,0 +1,40 @@
+#include "shell.h"
+
+void execute_commands(char *commands[], int count) {
+    int i;
+    for (i = 0; i < count; ++i) {
+        execute_command(commands[i]);
+    }
+}
+
+void logical_operations() {
+    char line[MAX_COMMAND_LEN];
+    char *commands[MAX_COMMAND_LEN]; /* Array to hold individual commands */
+    char *token;
+    int i = 0;
+    int command_count = 0;
+    int logical_and = 1; /* Flag for handling &&*/
+
+    printf("(simple_shell) $ ");
+    fgets(line, sizeof(line), stdin);
+    line[strcspn(line, "\n")] = '\0'; /* Remove newline character */
+
+    token = strtok(line, "&|");
+    while (token != NULL) {
+        commands[command_count++] = token;
+        token = strtok(NULL, "&|");
+    }
+    commands[command_count] = NULL; /* Mark the end of the commands array with NULL */
+
+    /*int i = 0;*/
+    while (i < command_count) {
+        int result = execute_command(commands[i]);
+        if (logical_and && result != 0 && strcmp(commands[i], "&&") == 0) {
+            logical_and = 0; /* Stop execution on encountering failed '&&'*/
+        } else if (!logical_and && result == 0 && strcmp(commands[i], "||") == 0) {
+            logical_and = 1; /* Stop execution on encountering successful '||'*/
+        }
+        i++;
+    }
+}
+

@@ -1,22 +1,16 @@
 #include "shell.h"
 
-void set_environment_variable(char *variable, char *value)
-{
-   char *prompt = "(simple_shell) $ ";
+void some_builtin_function(void) {
+    char *prompt = "(simple_shell) $ ";
     char *lineptr = NULL;
     char *token;
     char *delim = " ";
     int num_tokens = 0;
-    char **argv = NULL;
+    char **argv = malloc(sizeof(char *) * (num_tokens + 1));
     size_t n = 0;
     ssize_t nchars_read;
     int i;
 
-
-
-    (void)variable;
-    (void)value;
-  
     while (1) {
         printf("%s", prompt);
 
@@ -37,8 +31,7 @@ void set_environment_variable(char *variable, char *value)
         /* Tokenize the input */
         token = strtok(lineptr, delim);
 
- 
-       while (token != NULL) {
+        while (token != NULL) {
             argv = realloc(argv, sizeof(char *) * (num_tokens + 1));
             argv[num_tokens] = strdup(token);
 
@@ -55,26 +48,43 @@ void set_environment_variable(char *variable, char *value)
 
         /* Execute the command */
         if (num_tokens > 0) {
-            if (strcmp(argv[0], "setenv") == 0) {
-                int success;
-                if (num_tokens == 3) {
-                    success = setenv(argv[1], argv[2], 1);
-                    if (success != 0) {
-                        fprintf(stderr, "Failed to set environment variable %s\n", argv[1]);
+            if (strcmp(argv[0], "cd") == 0) {
+                /* Handle the cd command*/
+                if (num_tokens == 1) {
+                    
+		/* No argument provided, interpret as cd $HOME */
+                  char *home = getenv("HOME");
+                  if (home != NULL) {
+                        chdir(home);
+                        setenv("PWD", home, 1);
+                    } else {
+                        fprintf(stderr, "HOME environment variable not set.\n");
+                    }
+                } else if (strcmp(argv[1], "-") == 0) {
+                    /* Handle cd -*/
+                    char *old_pwd = getenv("OLDPWD");
+                    if (old_pwd != NULL) {
+                        chdir(old_pwd);
+                        setenv("PWD", old_pwd, 1);
+                    } else {
+                        fprintf(stderr, "OLDPWD not set.\n");
                     }
                 } else {
-                    fprintf(stderr, "Usage: setenv VARIABLE VALUE\n");
+                    /* Handle cd with an argument*/
+                    if (chdir(argv[1]) == 0) {
+                        char *cwd = getcwd(NULL, 0);
+                        setenv("PWD", cwd, 1);
+                        free(cwd);
+                    } else {
+                        perror("cd");
+                    }
                 }
+            } else if (strcmp(argv[0], "setenv") == 0) {
+                /* Handle the setenv command*/
+                /* ...*/
             } else if (strcmp(argv[0], "unsetenv") == 0) {
-                int success;
-                if (num_tokens == 2) {
-                    success = unsetenv(argv[1]);
-                    if (success != 0) {
-                        fprintf(stderr, "Failed to unset environment variable %s\n", argv[1]);
-                    }
-                } else {
-                    fprintf(stderr, "Usage: unsetenv VARIABLE\n");
-                }
+                /* Handle the unsetenv command*/
+                /* ...*/
             } else {
                 char *command = get_path(argv[0]);
 
@@ -95,5 +105,6 @@ void set_environment_variable(char *variable, char *value)
 
     /* Free allocated memory for lineptr */
     free(lineptr);
-   
+
+ 
 }
