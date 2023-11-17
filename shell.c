@@ -58,7 +58,7 @@ void free_argv(char **argv) {
 
 
 int main(void) {
-    char *prompt = "(hsh) $ ";
+    char *prompt = "(simple shell) $ ";
     char *lineptr = NULL;
     char *lineptr_copy = NULL;
     char *token;
